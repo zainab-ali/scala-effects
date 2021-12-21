@@ -1,3 +1,7 @@
 *.class
 *.log
 *~
+target
+.metals
+.bsp
+.bloop
