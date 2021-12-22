@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/backpressure1.iml" filepath="$PROJECT_DIR$/.idea/modules/backpressure1.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/backpressure2.iml" filepath="$PROJECT_DIR$/.idea/modules/backpressure2.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/concurrency.iml" filepath="$PROJECT_DIR$/.idea/modules/concurrency.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/ioeval.iml" filepath="$PROJECT_DIR$/.idea/modules/ioeval.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scala-effects.iml" filepath="$PROJECT_DIR$/.idea/modules/scala-effects.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scala-effects-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scala-effects-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/streamEval.iml" filepath="$PROJECT_DIR$/.idea/modules/streamEval.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/supermarket.iml" filepath="$PROJECT_DIR$/.idea/modules/supermarket.iml" />
+    </modules>
+  </component>
+</project>
