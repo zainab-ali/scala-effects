@@ -4,6 +4,8 @@ import fs2._
 import cats.effect._
 import cats.effect.std._
 import scala.concurrent.duration._
+import supermarket.Supermarket.Speed
+import supermarket.Supermarket.Shopper
 
 // Two checkouts
 // One processing fast shoppers
@@ -18,80 +20,68 @@ object Supermarket extends IOApp.Simple {
   case class Shopper(number: Int, speed: Speed)
 
   // Every other shopper is slow
-  val shopperSource: Stream[Pure, Shopper] = Stream
+  val shopperSource: Stream[IO, Shopper] = Stream
     .iterate(1)(_ + 1)
     .map(n => Shopper(n, if (n % 2 == 0) Slow else Fast))
+    .covary[IO]
 
-  val shopperQueue: IO[Queue[IO, Shopper]] = {
-    for {
-      queue <- Queue.bounded[IO, Shopper](1)
-      _ <- shopperSource.evalMap(queue.offer).compile.drain.start
-    } yield queue
-  }
+  final case class Queues(fast: Queue[IO, Shopper], slow: Queue[IO, Shopper])
 
-  def takeFrom(q: Queue[IO, Shopper]): Stream[IO, Shopper] = {
-    Stream.eval(q.take).repeat
-  }
+  def createQueues: IO[Queues] = for {
+    fastQueue <- Queue.unbounded[IO, Shopper]
+    slowQueue <- Queue.unbounded[IO, Shopper]
+  } yield Queues(fastQueue, slowQueue)
 
-  def splitStreams(
-      q: Queue[IO, Shopper]
-  ): IO[(Stream[IO, Shopper], Stream[IO, Shopper])] = {
-    val fastQueue = Queue.unbounded[IO, Shopper]
-    val slowQueue = Queue.unbounded[IO, Shopper]
-    val all = Stream.eval(q.take).repeat
-    val fast = all.filter(_.speed == Fast)
-    val slow = all.filter(_.speed == Slow)
+  def waitInQueue(
+      queues: Queues
+  )(in: Stream[IO, Shopper]): Stream[IO, Nothing] = ???
 
-    for {
-      fastQueue <- Queue.unbounded[IO, Shopper]
-      slowQueue <- Queue.unbounded[IO, Shopper]
-      shopper <- q.take
-      _ <-
-        if (shopper.speed == Fast) fastQueue.offer(shopper)
-        else slowQueue.offer(shopper)
-    } yield (
-      Stream.eval(fastQueue.take).repeat,
-      Stream.eval(slowQueue.take).repeat
-    )
-    //val fast = all.split(_.speed == Fast).flatMap(Stream.chunk)
-    //val slow = all.split(_.speed == Slow).flatMap(Stream.chunk)
-    //Stream(1, 3, 5).map(Shopper(_, Fas t)).covary[IO]
-    //val slow = Stream(2, 4, 6).map(Shopper(_, Slow)).covary[IO]
-    // Can we implement this properly?
-//    (fast, slow)
-  }
+  def fastCheckout(queues: Queues): Stream[IO, Shopper] = {
+    val fastStream: Stream[IO, Shopper] = ???
 
-  def processFastShopper(shopper: Shopper): IO[Unit] = {
-    IO.println(s"$shopper is paying")
-  }
-
-  def processSlowShopper(shopper: Shopper): IO[Unit] = {
-    IO.println(s"$shopper is paying") >> IO.sleep(5.seconds)
-  }
-
-  def havingPaid(stream: Stream[IO, Shopper]): Stream[IO, Shopper] = {
-    stream.evalMap((shopper: Shopper) =>
-      IO.println(s"$shopper has paid").as(shopper)
-    )
-  }
-
-  def mao(q: Queue[IO, Shopper]): IO[Stream[IO, Shopper]] = {
-
-    splitStreams(q).map { case (fast, slow) =>
-      fast.merge(slow).through(havingPaid)
+    def checkout(shopper: Shopper): IO[Unit] = {
+      IO.println(s"$shopper is paying")
     }
-    // How do we actually process things?
-
-    // What exactly is merge doing?
-//    finalStream.through(havingPaid)
+    ???
   }
 
-  def run: IO[Unit] = shopperQueue.flatMap { (q: Queue[IO, Shopper]) =>
-    Stream
-      .eval(mao(q))
-      .flatten
-      .take(30)
-      .compile
-      .drain
+  def slowCheckout(queues: Queues): Stream[IO, Shopper] = {
+    val slowStream: Stream[IO, Shopper] = ???
+
+    def checkout(shopper: Shopper): IO[Unit] = {
+      IO.println(s"$shopper is paying") >> IO.sleep(5.seconds)
+    }
+
+    ???
   }
+
+  def leaveCheckouts(
+      fastStream: Stream[IO, Shopper],
+      slowStream: Stream[IO, Shopper]
+  ): Stream[IO, Shopper] = {
+
+    def leave(shopper: Shopper): IO[Unit] = IO.println(s"$shopper has paid")
+
+    fastStream
+      .merge(slowStream)
+    ???
+  }
+
+  def runCheckouts(
+      entering: Stream[IO, Nothing],
+      leaving: Stream[IO, Shopper]
+  ): Stream[IO, Shopper] = ???
+
+  def run(in: Stream[IO, Shopper]): IO[Unit] = {
+    createQueues.flatMap { queues =>
+      val entering = waitInQueue(queues)(in)
+      val fastShoppers = fastCheckout(queues)
+      val slowShoppers = slowCheckout(queues)
+      val leaving = leaveCheckouts(fastShoppers, slowShoppers)
+      runCheckouts(entering, leaving)
+        .take(30).compile.drain
+    }
+  }
+
+  def run: IO[Unit] = run(shopperSource)
 }
