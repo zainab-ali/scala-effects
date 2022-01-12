@@ -34,25 +34,32 @@ object Supermarket extends IOApp.Simple {
 
   def waitInQueue(
       queues: Queues
-  )(in: Stream[IO, Shopper]): Stream[IO, Nothing] = ???
+  )(in: Stream[IO, Shopper]): Stream[IO, Unit] = {
+    def putShopperInQueue(shopper: Shopper): IO[Unit] = shopper.speed match {
+      case Slow => queues.slow.offer(shopper)
+      case Fast => queues.fast.offer(shopper)
+    }
+
+    in.evalMap(putShopperInQueue)
+  }
 
   def fastCheckout(queues: Queues): Stream[IO, Shopper] = {
-    val fastStream: Stream[IO, Shopper] = ???
+    val fastStream: Stream[IO, Shopper] = Stream.eval(queues.fast.take).repeat
 
     def checkout(shopper: Shopper): IO[Unit] = {
       IO.println(s"$shopper is paying")
     }
-    ???
+    fastStream.evalTap(checkout)
   }
 
   def slowCheckout(queues: Queues): Stream[IO, Shopper] = {
-    val slowStream: Stream[IO, Shopper] = ???
+    val slowStream: Stream[IO, Shopper] = Stream.eval(queues.slow.take).repeat
 
     def checkout(shopper: Shopper): IO[Unit] = {
       IO.println(s"$shopper is paying") >> IO.sleep(5.seconds)
     }
 
-    ???
+    slowStream.evalTap(checkout)
   }
 
   def leaveCheckouts(
@@ -64,7 +71,7 @@ object Supermarket extends IOApp.Simple {
 
     fastStream
       .merge(slowStream)
-    ???
+      .evalTap(leave)
   }
 
   def runCheckouts(
@@ -74,12 +81,15 @@ object Supermarket extends IOApp.Simple {
 
   def run(in: Stream[IO, Shopper]): IO[Unit] = {
     createQueues.flatMap { queues =>
+      println("Created the queues")
       val entering = waitInQueue(queues)(in)
       val fastShoppers = fastCheckout(queues)
       val slowShoppers = slowCheckout(queues)
       val leaving = leaveCheckouts(fastShoppers, slowShoppers)
-      runCheckouts(entering, leaving)
-        .take(30).compile.drain
+      (entering.take(4).debug(_ => "Got an element") ++ leaving.take(4))
+        .compile.drain
+      //runCheckouts(entering, leaving)
+        //.take(30).compile.drain
     }
   }
 
