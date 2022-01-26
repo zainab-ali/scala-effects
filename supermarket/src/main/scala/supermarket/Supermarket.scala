@@ -81,15 +81,26 @@ object Supermarket extends IOApp.Simple {
 
   def run(in: Stream[IO, Shopper]): IO[Unit] = {
     createQueues.flatMap { queues =>
+      // TODO: run in eval map
+      // TODO : can you map a sream to nothing? Stream(1).map(_ => ???)
       println("Created the queues")
-      val entering = waitInQueue(queues)(in)
+      val entering =
+        waitInQueue(queues)(in) //.drain // Running the side-effect ?
       val fastShoppers = fastCheckout(queues)
       val slowShoppers = slowCheckout(queues)
       val leaving = leaveCheckouts(fastShoppers, slowShoppers)
-      (entering.take(4).debug(_ => "Got an element") ++ leaving.take(4))
-        .compile.drain
+      val result: Stream[IO, Shopper] = (entering
+        // .debug((_: Nothing) => "Got an element")
+        .merge(
+          leaving.take(
+            4
+          )
+        ))
+      result.compile.drain
+//      leaving.take(4).compile.drain//
+
       //runCheckouts(entering, leaving)
-        //.take(30).compile.drain
+      //.take(30).compile.drain
     }
   }
 
