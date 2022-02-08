@@ -24,3 +24,7 @@ lazy val concurrency = (project in file("concurrency"))
 
 lazy val supermarket = (project in file("supermarket"))
   .settings(commonSettings)
+
+lazy val threading = (project in file("threading"))
+  .settings(commonSettings)
+
