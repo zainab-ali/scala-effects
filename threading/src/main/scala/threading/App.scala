@@ -52,6 +52,6 @@ object App extends IOApp.Simple {
 
   def run: IO[Unit] = {
     /** We'll also do different kinds of work */
-    Work.time(Work.doLotsOf(Work.writeToTheDatabase))
+    Work.time(Work.writeToTheDatabase)
   }
 }
