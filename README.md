@@ -37,3 +37,29 @@ The app can run two different kinds of work, found in the `Work` object.
    ```scala
 	Work.time(Work.writeToTheDatabase)
    ```
+
+## Session 2 - warm up exercise
+
+Find out the number of available processors on your computer:
+
+ - Enter the SBT console
+
+ ```
+ sbt
+ sbt> project threading
+ sbt> console
+ scala> Runtime.getRuntime().availableProcessors()
+ val res0: Int = 16 // This is the number of available processors
+ ```
+
+ - How long does it take to run the app with this number of threads?
+
+
+   ```scala
+   // In App.scala
+	override def runtime: unsafe.IORuntime = Setup.createBasicRuntime(Setup.bounded("global", 16))
+   ```
+
+ - What about twice this number?
+ - What about half this number?
+

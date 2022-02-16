@@ -32,7 +32,10 @@ object Setup {
     (runtimeThunk: () => IORuntime) =>
       lazy val lazyRuntime = runtimeThunk()
       IORuntime
-        .createDefaultComputeThreadPool(lazyRuntime, threads = numThreads)
+        .createDefaultComputeThreadPool(
+          lazyRuntime,
+          threads = numThreads,
+          threadPrefix = prefix)
         ._1
   }
 

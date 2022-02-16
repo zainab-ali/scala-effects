@@ -35,7 +35,7 @@ object Work {
 
   /** Do a lot of work in parallel. */
   def doLotsOf(work: IO[Unit]): IO[Unit] =
-    List.fill(10)(work).parSequence.void
+    List.fill(20)(work).parSequence.void
 
   /** Time the work and print out the time once complete. */
   def time(work: IO[Unit]): IO[Unit] =
@@ -48,10 +48,10 @@ object App extends IOApp.Simple {
 
   /** We'll play around with different numbers of threads */
   override def runtime: unsafe.IORuntime =
-    Setup.createBasicRuntime(Setup.unbounded("global"))
+    Setup.createBasicRuntime(Setup.bounded("global", 1))
 
   def run: IO[Unit] = {
     /** We'll also do different kinds of work */
-    Work.time(Work.writeToTheDatabase)
+    Work.time(Work.doLotsOf(Work.calculateHash))
   }
 }
