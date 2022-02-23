@@ -63,3 +63,26 @@ Find out the number of available processors on your computer:
  - What about twice this number?
  - What about half this number?
 
+## Session 3 - warm up exercise
+
+The `evalOn` function allows us to execute an `IO` on a different thread pool (an `ExecutionContext` is another name for a thread pool).
+
+ 1. Take a look at the new `Work.factorial` function. Time it and see how long it takes:
+
+	```scala
+	// In App.scala
+	  def run: IO[Unit] = Work.time(factorial)
+	```
+
+	If it takes less than a second, increase the `2000000000L` number within the function.
+
+	What is printed as the thread name?
+
+ 2. Now execute it on the `scala.concurrent.ExecutionContext.global`
+
+	```scala
+	// In App.scala
+	  def run: IO[Unit] = Work.time(factorial.evalOn(scala.concurrent.ExecutionContext.global))
+	```
+
+	What is printed as the thread name?

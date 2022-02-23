@@ -33,6 +33,17 @@ object Work {
     } yield ()
   }
 
+  def factorial: IO[Unit] = {
+    @scala.annotation.tailrec
+    def go(n: Long, total: Long): Long = {
+      if (n > 1) {
+        go(n - 1, total * n)
+      } else total
+    }
+
+    printThread(() => go(2000000000L, 1))
+  }
+
   /** Do a lot of work in parallel. */
   def doLotsOf(work: IO[Unit]): IO[Unit] =
     List.fill(20)(work).parSequence.void
@@ -42,6 +53,14 @@ object Work {
     work.timed.flatMap {
       case (t, _) => IO.println(s"The work took ${t.toSeconds} seconds.")
     }
+
+  def printThread(work: () => Unit): IO[Unit] = {
+    IO {
+      val name = Thread.currentThread.getName
+      val result = work()
+      println(s"Running on thread $name")
+    }
+  }
 }
 
 object App extends IOApp.Simple {
