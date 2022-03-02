@@ -91,7 +91,7 @@ The `evalOn` function allows us to execute an `IO` on a different thread pool (a
 
 1. Take a look at `writeToTheDatabase`. It now queries postgres.
 
-2. Run docker with `docker compose up`. This should start a postgres container.
+2. Run docker with `docker compose up -d`. This should start a postgres container.
 
 3. Run the application with `sbt`. Check that you can connect to postgres. How long does the query take?
 
