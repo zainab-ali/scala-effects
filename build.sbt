@@ -27,4 +27,9 @@ lazy val supermarket = (project in file("supermarket"))
 
 lazy val threading = (project in file("threading"))
   .settings(commonSettings)
-
+  .settings(
+    libraryDependencies ++= Seq(
+      "org.tpolecat" %% "doobie-core"      % "1.0.0-RC1",
+      "org.tpolecat" %% "doobie-hikari"    % "1.0.0-RC1",
+      "org.tpolecat" %% "doobie-postgres"  % "1.0.0-RC1",
+    ))

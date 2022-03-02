@@ -10,16 +10,27 @@ import scala.concurrent.duration.*
 import cats.effect.implicits.*
 import cats.implicits.*
 import cats.effect.std.Random
+import doobie.util.ExecutionContexts
+import doobie.hikari.HikariTransactor
+import doobie.*
+import doobie.hikari.*
+import doobie.implicits.*
+import com.zaxxer.hikari.*
 
-/** Take a look at the following two computations. 
-    What are the differences? 
-  - How long does each take to run?
-  - Are they run on the same pools? How can you tell?
-*/
 object Work {
 
-  def writeToTheDatabase: IO[Unit] = {
-    IO(Thread.sleep(5000L))
+  def transactor(ec: ExecutionContext): HikariTransactor[IO] = {
+    val config = new HikariConfig()
+    config.setJdbcUrl("jdbc:postgresql://localhost:5432/postgres")
+    config.setUsername("postgres")
+    config.setPassword("postgres")
+    config.setMaximumPoolSize(10)
+    val dataSource = new HikariDataSource(config)
+    HikariTransactor[IO](dataSource, ec)
+  }
+
+  def writeToTheDatabase(xa: HikariTransactor[IO]): IO[Unit] = {
+    sql"select pg_sleep(5)".query[Unit].unique.transact(xa)
   }
 
   def calculateHash: IO[Unit] = {
@@ -66,11 +77,12 @@ object Work {
 object App extends IOApp.Simple {
 
   /** We'll play around with different numbers of threads */
-  override def runtime: unsafe.IORuntime =
-    Setup.createBasicRuntime(Setup.bounded("global", 1))
+  val ec = ExecutionContexts.fixedThreadPool[IO](5)
 
   def run: IO[Unit] = {
-    /** We'll also do different kinds of work */
-    Work.time(Work.doLotsOf(Work.calculateHash))
+    ec.use { ec =>
+      val transactor = Work.transactor(ec)
+      Work.time(Work.writeToTheDatabase(transactor))
+    }
   }
 }
