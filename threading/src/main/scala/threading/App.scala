@@ -1,5 +1,6 @@
 package threading
 
+import scala.concurrent._
 import cats.effect.*
 import cats.effect.unsafe.IORuntimeConfig
 import cats.effect.unsafe.IORuntime
@@ -24,13 +25,13 @@ object Work {
     config.setJdbcUrl("jdbc:postgresql://localhost:5432/postgres")
     config.setUsername("postgres")
     config.setPassword("postgres")
-    config.setMaximumPoolSize(10)
+    config.setMaximumPoolSize(3)
     val dataSource = new HikariDataSource(config)
     HikariTransactor[IO](dataSource, ec)
   }
 
   def writeToTheDatabase(xa: HikariTransactor[IO]): IO[Unit] = {
-    sql"select pg_sleep(5)".query[Unit].unique.transact(xa)
+    sql"select pg_sleep(10)".query[Unit].unique.transact(xa)
   }
 
   def calculateHash: IO[Unit] = {
@@ -72,12 +73,18 @@ object Work {
       println(s"Running on thread $name")
     }
   }
+
+  def sendKafkaMessage: Future[Int] = {
+    // We need a thread pool
+    import scala.concurrent.ExecutionContext.Implicits.global
+    Future(println("Hey!")).as(1)
+  }
 }
 
 object App extends IOApp.Simple {
 
   /** We'll play around with different numbers of threads */
-  val ec = ExecutionContexts.fixedThreadPool[IO](5)
+  val ec = ExecutionContexts.fixedThreadPool[IO](1)
 
   def run: IO[Unit] = {
     ec.use { ec =>

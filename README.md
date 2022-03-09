@@ -95,3 +95,13 @@ The `evalOn` function allows us to execute an `IO` on a different thread pool (a
 
 3. Run the application with `sbt`. Check that you can connect to postgres. How long does the query take?
 
+## Session 5 - warm up exercise
+
+The app runs a single `writeToTheDatabase` task. It has:
+ - an unbounded blocking thread pool as part of `IORuntime`
+ - a bounded compute pool
+ - an `ec` threadpool with a single thread that is passed to hikari.
+
+1. Predict which threads will be blocked when running the app.
+
+2. Run the app. In the session, we will profile this with visualvm to check your results.
