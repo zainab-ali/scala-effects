@@ -81,6 +81,9 @@ object Work {
     import scala.concurrent.ExecutionContext.Implicits.global
     Future(println("Hey!")).as(1)
   }
+
+  def handleError(work: IO[Unit]): IO[Unit] =
+    work.handleErrorWith(e => IO.println(s"Caught error: $e"))
 }
 
 object App extends IOApp.Simple {
