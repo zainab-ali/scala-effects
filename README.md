@@ -105,3 +105,22 @@ The app runs a single `writeToTheDatabase` task. It has:
 1. Predict which threads will be blocked when running the app.
 
 2. Run the app. In the session, we will profile this with visualvm to check your results.
+
+
+# Session 6 - warm up exercise
+
+The `snooze` task sleeps a thread for 100 seconds.
+
+Consider a factorial task followed by a snooze task:
+
+```scala
+Work.factorial >> Work.snooze
+```
+
+1. If many of these tasks are run in parallel, predict how many factorials will be computed in the first 30 seconds.
+
+  ```scala
+  Work.doLotsOf(Work.time(Work.factorial) >> Work.snooze)
+  ```
+
+2. Run the app. In the session, we will profile this with visualvm to check your results.

@@ -34,6 +34,8 @@ object Work {
     sql"select pg_sleep(10)".query[Unit].unique.transact(xa)
   }
 
+  def snooze: IO[Unit] = IO.blocking(Thread.sleep(100000L))
+
   def calculateHash: IO[Unit] = {
     import java.security.MessageDigest
     val stringLength = 100000000
@@ -84,12 +86,20 @@ object Work {
 object App extends IOApp.Simple {
 
   /** We'll play around with different numbers of threads */
-  val ec = ExecutionContexts.fixedThreadPool[IO](1)
+  val ecResource: Resource[IO, ExecutionContext] = ExecutionContexts.fixedThreadPool[IO](1)
+
+  override val runtime: IORuntime = Setup.createRuntime(
+    compute = Setup.bounded("io-compute", 4),
+    blocking = Setup.unbounded("io-blocking")
+  )
 
   def run: IO[Unit] = {
-    ec.use { ec =>
-      val transactor = Work.transactor(ec)
-      Work.time(Work.writeToTheDatabase(transactor))
-    }
+    // ecResource.use { ec =>
+    //   val transactor = Work.transactor(ec)
+    //   Work.time(
+    //     Work.doLotsOf(Work.writeToTheDatabase(transactor))
+    //   )
+    // }
+    Work.doLotsOf(Work.time(Work.factorial) >> Work.snooze)
   }
 }
