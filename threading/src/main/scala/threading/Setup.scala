@@ -5,10 +5,13 @@ import cats.effect.unsafe.IORuntimeConfig
 import cats.effect.unsafe.IORuntime
 import scala.concurrent.ExecutionContext
 import java.util.concurrent.Executor
+import java.util.concurrent.Executors
 import java.util.concurrent.ExecutorService
 import scala.concurrent.duration.*
 import cats.effect.implicits.*
 import cats.implicits.*
+import java.util.concurrent.ThreadFactory
+import java.util.concurrent.atomic.AtomicInteger
 
 /** This code sets up the IORuntime.  You don't need to understand how
   * this works ⸺ It's a bit complex because of the inner plumbing of
@@ -38,6 +41,17 @@ object Setup {
           threadPrefix = prefix)
         ._1
   }
+
+  def fixed(prefix: String, numThreads: Int): ExecutionContextCreator = _ => {
+      val threadCount = new AtomicInteger(0)
+      val executor = Executors.newFixedThreadPool(numThreads, { (r: Runnable) =>
+        val t = new Thread(r)
+        t.setName(s"${prefix}-${threadCount.getAndIncrement()}")
+        t.setDaemon(true)
+        t
+      } )
+      ExecutionContext.fromExecutor(executor)
+    }
 
   /** Create an IORuntime given some bounded / unbounded thread pools. */
   def createRuntime(
