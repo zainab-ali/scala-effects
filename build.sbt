@@ -32,4 +32,6 @@ lazy val threading = (project in file("threading"))
       "org.tpolecat" %% "doobie-core"      % "1.0.0-RC1",
       "org.tpolecat" %% "doobie-hikari"    % "1.0.0-RC1",
       "org.tpolecat" %% "doobie-postgres"  % "1.0.0-RC1",
+      "org.http4s"   %% "http4s-blaze-server" % "0.23.0",
+      "org.http4s"   %% "http4s-dsl" % "0.23.0"
     ))

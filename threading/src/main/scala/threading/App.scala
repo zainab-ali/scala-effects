@@ -17,6 +17,12 @@ import doobie.*
 import doobie.hikari.*
 import doobie.implicits.*
 import com.zaxxer.hikari.*
+import fs2.*
+import org.http4s.blaze.server.*
+import org.http4s.*
+import org.http4s.implicits.*
+import org.http4s.dsl.Http4sDsl
+
 
 object Work {
 
@@ -103,6 +109,27 @@ object App extends IOApp.Simple {
     //     Work.doLotsOf(Work.writeToTheDatabase(transactor))
     //   )
     // }
-    Work.doLotsOf(Work.time(Work.factorial) >> Work.snooze)
+    Server.stream.compile.drain
+    // Work.doLotsOf(Work.time(Work.factorial) >> Work.snooze)
   }
+}
+
+object Server {
+  def stream: Stream[IO, Nothing] =
+          (Stream.eval(IO.executionContext) >>= (ec =>
+        BlazeServerBuilder[IO](ec)
+          .bindLocal(8081)
+          .withHttpApp(httpApp.orNotFound)
+          .serve
+      )).drain
+
+  val httpApp: HttpRoutes[IO] = {
+    val dsl = new Http4sDsl[IO]{}
+    import dsl._
+    HttpRoutes.of[IO] {
+      case GET -> Root / "joke" =>
+        Ok("foo")
+    }
+  }
+
 }
