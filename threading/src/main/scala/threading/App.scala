@@ -97,38 +97,39 @@ object App extends IOApp.Simple {
   /** We'll play around with different numbers of threads */
   val ecResource: Resource[IO, ExecutionContext] = ExecutionContexts.fixedThreadPool[IO](1)
 
-  override val runtime: IORuntime = Setup.createRuntime(
-    compute = Setup.bounded("io-compute", 4),
-    blocking = Setup.unbounded("io-blocking")
-  )
+  // override val runtime: IORuntime = Setup.createRuntime(
+  //   compute = Setup.bounded("io-compute", 4),
+  //   blocking = Setup.unbounded("io-blocking")
+  // )
 
   def run: IO[Unit] = {
-    // ecResource.use { ec =>
-    //   val transactor = Work.transactor(ec)
-    //   Work.time(
-    //     Work.doLotsOf(Work.writeToTheDatabase(transactor))
-    //   )
-    // }
-    Server.stream.compile.drain
+    ecResource.use { ec =>
+      val transactor = Work.transactor(ec)
+      val work = Work.time(
+        Work.doLotsOf(Work.writeToTheDatabase(transactor))
+      )
+      work
+      // Server.stream(work).compile.drain
+    }
     // Work.doLotsOf(Work.time(Work.factorial) >> Work.snooze)
   }
 }
 
 object Server {
-  def stream: Stream[IO, Nothing] =
-          (Stream.eval(IO.executionContext) >>= (ec =>
-        BlazeServerBuilder[IO](ec)
-          .bindLocal(8081)
-          .withHttpApp(httpApp.orNotFound)
-          .serve
-      )).drain
 
-  val httpApp: HttpRoutes[IO] = {
+  def stream(work: IO[Unit]): Stream[IO, Nothing] =
+    BlazeServerBuilder[IO]
+      .bindLocal(8081)
+      .withHttpApp(httpApp(work).orNotFound)
+      .serve
+      .drain
+
+  def httpApp(work: IO[Unit]): HttpRoutes[IO] = {
     val dsl = new Http4sDsl[IO]{}
     import dsl._
     HttpRoutes.of[IO] {
-      case GET -> Root / "joke" =>
-        Ok("foo")
+      case GET -> Root / "work" =>
+        work >> Ok()
     }
   }
 

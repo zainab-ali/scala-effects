@@ -1,5 +1,5 @@
 lazy val commonSettings = Seq(
-  scalaVersion := "3.0.0",
+  scalaVersion := "3.1.0",
   libraryDependencies += "co.fs2" %% "fs2-core" % "3.0.6",
   libraryDependencies += "co.fs2" %% "fs2-io" % "3.0.6",
   fork := true
@@ -29,9 +29,9 @@ lazy val threading = (project in file("threading"))
   .settings(commonSettings)
   .settings(
     libraryDependencies ++= Seq(
-      "org.tpolecat" %% "doobie-core"      % "1.0.0-RC1",
-      "org.tpolecat" %% "doobie-hikari"    % "1.0.0-RC1",
-      "org.tpolecat" %% "doobie-postgres"  % "1.0.0-RC1",
-      "org.http4s"   %% "http4s-blaze-server" % "0.23.0",
-      "org.http4s"   %% "http4s-dsl" % "0.23.0"
+      "org.tpolecat" %% "doobie-core"      % "1.0.0-RC2",
+      "org.tpolecat" %% "doobie-hikari"    % "1.0.0-RC2",
+      "org.tpolecat" %% "doobie-postgres"  % "1.0.0-RC2",
+      "org.http4s"   %% "http4s-blaze-server" % "0.23.10",
+      "org.http4s"   %% "http4s-dsl" % "0.23.10"
     ))
