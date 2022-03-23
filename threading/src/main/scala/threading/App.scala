@@ -32,6 +32,7 @@ object Work {
     config.setUsername("postgres")
     config.setPassword("postgres")
     config.setMaximumPoolSize(3)
+    config.setConnectionTimeout(2000L)
     val dataSource = new HikariDataSource(config)
     HikariTransactor[IO](dataSource, ec)
   }
@@ -106,7 +107,7 @@ object App extends IOApp.Simple {
     ecResource.use { ec =>
       val transactor = Work.transactor(ec)
       val work = Work.time(
-        Work.doLotsOf(Work.writeToTheDatabase(transactor))
+        Work.doLotsOf(Work.handleError(Work.writeToTheDatabase(transactor)))
       )
       work
       // Server.stream(work).compile.drain

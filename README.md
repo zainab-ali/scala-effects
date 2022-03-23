@@ -124,3 +124,25 @@ Work.factorial >> Work.snooze
   ```
 
 2. Run the app. In the session, we will profile this with visualvm to check your results.
+
+# Session 7 - warm up exercise
+
+This exercise explores the thread pool used by Hikari.
+
+The hikari threadpool is configured with a single thread. There are only three connections allowed at once (the `maximumPoolSize` is `3`).  There is a connection timeout of two seconds.
+
+1. Consider:
+
+   ```scala
+   Work.doLotsOf(Work.handleError(Work.writeToTheDatabase(transactor)))
+   ```
+   
+   What errors do you expect to be printed to the console and when?
+   
+2. Consider configuring the thread pool with two threads:
+
+   ```scala
+   val ecResource: Resource[IO, ExecutionContext] = ExecutionContexts.fixedThreadPool[IO](2)
+   ```
+
+   What do you expect to be printed to the console and when?
