@@ -151,5 +151,5 @@ The hikari threadpool is configured with a single thread. There are only three c
 
 The threading project now contains a `HttpApp`.
 
-1. Start the app with `sbt run`.
+1. Start the app with `run`.
 2. Query the app with `./work.sh 1`. How many factorial tasks do you expect to run?
