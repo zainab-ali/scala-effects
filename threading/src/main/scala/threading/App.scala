@@ -106,11 +106,10 @@ object App extends IOApp.Simple {
   def run: IO[Unit] = {
     ecResource.use { ec =>
       val transactor = Work.transactor(ec)
-      val work = Work.time(
-        Work.doLotsOf(Work.handleError(Work.writeToTheDatabase(transactor)))
-      )
-      work
-      // Server.stream(work).compile.drain
+      // val work = Work.time(Work.doLotsOf(Work.handleError(Work.writeToTheDatabase(transactor))))
+      val work = Work.time(Work.doLotsOf(Work.factorial))
+      // work
+      Server.stream(work).compile.drain
     }
     // Work.doLotsOf(Work.time(Work.factorial) >> Work.snooze)
   }
