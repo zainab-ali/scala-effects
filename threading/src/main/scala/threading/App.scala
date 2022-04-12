@@ -38,7 +38,7 @@ object Work {
   }
 
   def writeToTheDatabase(xa: HikariTransactor[IO]): IO[Unit] = {
-    sql"select pg_sleep(10)".query[Unit].unique.transact(xa)
+    IO.println("Writing to the database") >> sql"select pg_sleep(10)".query[Unit].unique.transact(xa)
   }
 
   def snooze: IO[Unit] = IO.blocking(Thread.sleep(100000L))
@@ -106,12 +106,9 @@ object App extends IOApp.Simple {
   def run: IO[Unit] = {
     ecResource.use { ec =>
       val transactor = Work.transactor(ec)
-      // val work = Work.time(Work.doLotsOf(Work.handleError(Work.writeToTheDatabase(transactor))))
-      val work = Work.time(Work.doLotsOf(Work.factorial))
-      // work
+      val work = Work.writeToTheDatabase(transactor)
       Server.stream(work).compile.drain
     }
-    // Work.doLotsOf(Work.time(Work.factorial) >> Work.snooze)
   }
 }
 
@@ -128,8 +125,9 @@ object Server {
     val dsl = new Http4sDsl[IO]{}
     import dsl._
     HttpRoutes.of[IO] {
+      case GET -> Root / "ok" => Ok("ok")
       case GET -> Root / "work" =>
-        work >> Ok()
+        work >> IO.println("Wrote to the db") >> Ok("Wrote to the db\n")
     }
   }
 

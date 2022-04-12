@@ -153,3 +153,18 @@ The threading project now contains a `HttpApp`.
 
 1. Start the app with `run`.
 2. Query the app with `./work.sh 1`. How many factorial tasks do you expect to run?
+
+# Session 9 - warm up exercise
+
+The `HttpApp` runs items of `work`.
+
+1. Start the app with `sbt run`.
+2. Query the app with `./work.sh 5`. How many work items do you expect to run concurrently?
+3. Consider the route:
+
+	```
+	case GET -> Root / "work" =>
+	  work >> IO.println("Wrote to the db") >> Ok("Wrote to the db\n")
+	```
+
+	Modify `work` to `work.start`. Query the app again with `./work.sh 5`. How many work items do you expect to run concurrently?
