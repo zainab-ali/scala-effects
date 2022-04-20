@@ -2,6 +2,7 @@ package threading
 
 import scala.concurrent._
 import cats.effect.*
+import cats.effect.std.*
 import cats.effect.unsafe.IORuntimeConfig
 import cats.effect.unsafe.IORuntime
 import scala.concurrent.ExecutionContext
@@ -22,6 +23,7 @@ import org.http4s.blaze.server.*
 import org.http4s.*
 import org.http4s.implicits.*
 import org.http4s.dsl.Http4sDsl
+import java.util.UUID
 
 
 object Work {
@@ -91,6 +93,17 @@ object Work {
 
   def handleError(work: IO[Unit]): IO[Unit] =
     work.handleErrorWith(e => IO.println(s"Caught error: $e"))
+
+  def randomUUID: IO[UUID] = UUIDGen[IO].randomUUID
+
+  def publishSuccessMessage(id: UUID): IO[Unit] = {
+    IO.println(s"Task $id succeeded.")
+  }
+
+  def publishFailedMessage(id: UUID): IO[Unit] = {
+    IO.println(s"Task $id failed.")
+  }
+
 }
 
 object App extends IOApp.Simple {
@@ -126,9 +139,10 @@ object Server {
     import dsl._
     HttpRoutes.of[IO] {
       case GET -> Root / "ok" => Ok("ok")
-      case GET -> Root / "work" =>
-        work >> IO.println("Wrote to the db") >> Ok("Wrote to the db\n")
+      case GET -> Root / "sync-work" =>
+        work >> Ok("Wrote to the db\n")
+      case GET -> Root / "async-work" =>
+        work.start >> Ok("Started to write to the db\n")
     }
   }
-
 }

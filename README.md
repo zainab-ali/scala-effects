@@ -168,3 +168,15 @@ The `HttpApp` runs items of `work`.
 	```
 
 	Modify `work` to `work.start`. Query the app again with `./work.sh 5`. How many work items do you expect to run concurrently?
+
+# Session 10 - warm up exercise
+
+The app now has two endpoints: `sync-work` and `async-work`.
+  
+1. Start the app with `sbt run`.
+
+You can call the endpoints with the shell script, e.g: `./work.sh sync-work 4`.
+2. Consider the difference between the `sync-work` and `async-work` endpoints.
+  - How do they behave on failure? The fourth request made will fail due to a connection timeout.
+  - What status codes do they respond with?
+  - In both cases, how do they schedule work?
