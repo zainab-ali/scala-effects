@@ -180,3 +180,13 @@ You can call the endpoints with the shell script, e.g: `./work.sh sync-work 4`.
   - How do they behave on failure? The fourth request made will fail due to a connection timeout.
   - What status codes do they respond with?
   - In both cases, how do they schedule work?
+
+# Session 11 - warm up exercise
+
+The app now has two endpoints under `work`.
+ - The `POST` endpoint starts an async task.
+ - The `GET` endpoint checks its status.
+
+1. Think about the code needed to properly implement these endpoints.  Draw a rough diagram of the design in Excelidraw (or your preferred tool).
+
+We'll begin today's session by mobbing on a design.

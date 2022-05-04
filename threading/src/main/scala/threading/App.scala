@@ -141,8 +141,13 @@ object Server {
       case GET -> Root / "ok" => Ok("ok")
       case GET -> Root / "sync-work" =>
         work >> Ok("Wrote to the db\n")
-      case GET -> Root / "async-work" =>
-        work.start >> Ok("Started to write to the db\n")
+      case POST -> Root / "work" =>
+        // TODO: Generate a unique id
+        // TODO: An id generator
+        // Associate the task to the id
+        // Store the fiber somewhere or store the progress in a DB
+        work.start >> Ok("some-task-id")
+      case GET -> Root / "work" / taskId => Ok("the-task-status")
     }
   }
 }
