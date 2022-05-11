@@ -190,3 +190,22 @@ The app now has two endpoints under `work`.
 1. Think about the code needed to properly implement these endpoints.  Draw a rough diagram of the design in Excelidraw (or your preferred tool).
 
 We'll begin today's session by mobbing on a design.
+
+# Session 12 - warm up exercise
+
+The app has some stubbed code under the `work` endpoint.
+
+```scala
+ for {
+   taskId <- Work.randomUUID
+   _ <- Work.queueTask(taskId)
+   _ <- Work.recordTask(taskId)
+   result <- Ok(taskId.toString)
+ } yield result
+```
+
+This queues a task (e.g. by sending it a kafka topic) and records it in some data store.
+
+1. What possible states can a task be in? You can consider "queued" and "running" to be states.
+2. What happens if `queueTask` succeeds, but `recordTask` fails?
+3. Can `recordTask` ever succeed if `queueTask` fails?
