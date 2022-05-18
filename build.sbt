@@ -35,3 +35,14 @@ lazy val threading = (project in file("threading"))
       "org.http4s"   %% "http4s-blaze-server" % "0.23.10",
       "org.http4s"   %% "http4s-dsl" % "0.23.10"
     ))
+
+lazy val messageQueue = (project in file("queue"))
+  .settings(commonSettings)
+  .settings(
+    libraryDependencies ++= Seq(
+      "org.tpolecat" %% "doobie-core"      % "1.0.0-RC2",
+      "org.tpolecat" %% "doobie-hikari"    % "1.0.0-RC2",
+      "org.tpolecat" %% "doobie-postgres"  % "1.0.0-RC2",
+      "com.github.fd4s" %% "fs2-kafka" % "2.5.0-M3"
+    )
+  )

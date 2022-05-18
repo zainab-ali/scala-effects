@@ -209,3 +209,12 @@ This queues a task (e.g. by sending it a kafka topic) and records it in some dat
 1. What possible states can a task be in? You can consider "queued" and "running" to be states.
 2. What happens if `queueTask` succeeds, but `recordTask` fails?
 3. Can `recordTask` ever succeed if `queueTask` fails?
+
+# Session 13 - Warm up exercise
+
+The `messageQueue` project consumes messages (from kafka, for example), processes them and commits the offset.
+
+Take a look at the `processMessages` function.
+
+1. Can it ever commit an offset for a task before the task has been processed?
+2. Can it ever process a task more than once? Consider the case of application failure and restarts.
