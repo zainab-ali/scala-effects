@@ -57,8 +57,7 @@ object App extends IOApp.Simple {
   def commitOffset(offset: Offset): IO[Unit] =
     IO.println(s"Committed offset $offset")
 
-  def checkTaskIsPending(taskId: TaskId): IO[Boolean]= ???
-   // query a db
+  def checkTaskIsPending(taskId: TaskId): IO[Boolean]= IO(true)
 
   def processMessages(ref: Ref[IO, TaskId], random: Random[IO], xa: HikariTransactor[IO]): IO[Unit] =
     Stream.repeatEval(takeMessage(ref, random))
