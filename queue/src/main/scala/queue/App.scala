@@ -50,20 +50,30 @@ object App extends IOApp.Simple {
     IO.println(s"Processing ${message.taskId} with time ${message.time}") >> sql"select pg_sleep(${message.taskId})".query[Unit].unique.transact(xa)
 
   def recordTask(taskId: TaskId): IO[Unit] =
-    IO.println(s"Finished task $taskId")
+    if (taskId == 3) {
+      IO.raiseError(new Error("FAIL!"))
+    } else IO.println(s"Finished task $taskId")
 
   def commitOffset(offset: Offset): IO[Unit] =
     IO.println(s"Committed offset $offset")
 
+  def checkTaskIsPending(taskId: TaskId): IO[Boolean]= ???
+   // query a db
+
   def processMessages(ref: Ref[IO, TaskId], random: Random[IO], xa: HikariTransactor[IO]): IO[Unit] =
     Stream.repeatEval(takeMessage(ref, random))
-      .parEvalMap(3)(message => processTask(xa)(message).as(message))
+      .evalMap(message =>
+        checkTaskIsPending(message.taskId).flatMap { isPending =>
+          if (isPending) processTask(xa)(message).as(message)
+          else IO(message)
+        }
+      )
       .evalMap(message => recordTask(message.taskId).as(message))
       .evalMap(message => commitOffset(message.offset))
       .compile.drain
 
-  val ecResource: Resource[IO, ExecutionContext] = ExecutionContexts.fixedThreadPool[IO](1)
 
+  val ecResource: Resource[IO, ExecutionContext] = ExecutionContexts.fixedThreadPool[IO](1)
 
   def run: IO[Unit] = {
     ecResource.use { ec =>

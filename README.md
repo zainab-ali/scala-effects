@@ -218,3 +218,10 @@ Take a look at the `processMessages` function.
 
 1. Can it ever commit an offset for a task before the task has been processed?
 2. Can it ever process a task more than once? Consider the case of application failure and restarts.
+
+# Session 14 - Warm up exercise
+
+Consider `processMessages`. It processes each message sequentially.
+
+1. Could we use `parEvalMap` to process these messages? 
+2. What would the consequences be of using `parEvalMapUnordered`?
