@@ -13,7 +13,7 @@ import doobie.implicits.*
 import scala.concurrent.ExecutionContext
 import com.zaxxer.hikari.*
 import cats.effect.std.*
-
+import org.postgresql.util.PSQLException
 
 object Work {
 
@@ -28,11 +28,6 @@ object Work {
     HikariTransactor[IO](dataSource, ec)
   }
 
-
-
-
-
-
 }
 
 object App extends IOApp.Simple {
@@ -43,36 +38,49 @@ object App extends IOApp.Simple {
   case class Message(taskId: Int, offset: Offset, time: Int)
 
   def takeMessage(ref: Ref[IO, TaskId], random: Random[IO]): IO[Message] = {
-    (ref.getAndUpdate(_ + 1), random.betweenInt(1, 3)).mapN((id, time) => Message(id, id, time))
+    (ref.getAndUpdate(_ + 1), random.betweenInt(-10, 3)).mapN((id, time) =>
+      Message(id, id, time)
+    )
   }
 
   def processTask(xa: HikariTransactor[IO])(message: Message): IO[Unit] =
-    IO.println(s"Processing ${message.taskId} with time ${message.time}") >> sql"select pg_sleep(${message.taskId})".query[Unit].unique.transact(xa)
+    IO.println(s"Processing ${message.taskId} with time ${message.time}") >>
+      sql"select pg_sleep(${message.time})"
+        .query[Unit]
+        .unique
+        .transact(xa)
 
-  def recordTask(taskId: TaskId): IO[Unit] =
-    if (taskId == 3) {
-      IO.raiseError(new Error("FAIL!"))
-    } else IO.println(s"Finished task $taskId")
+  def recordTaskSuccess(taskId: TaskId): IO[Unit] =
+    IO.println(s"Finished task $taskId")
+
+  def recordTaskFailure(taskId: TaskId): IO[Unit] =
+    IO.println(s"Failed task $taskId")
 
   def commitOffset(offset: Offset): IO[Unit] =
     IO.println(s"Committed offset $offset")
 
-  def checkTaskIsPending(taskId: TaskId): IO[Boolean]= IO(true)
+  def checkTaskIsPending(taskId: TaskId): IO[Boolean] = IO(true)
 
-  def processMessages(ref: Ref[IO, TaskId], random: Random[IO], xa: HikariTransactor[IO]): IO[Unit] =
-    Stream.repeatEval(takeMessage(ref, random))
-      .evalMap(message =>
+  def processMessages(
+      ref: Ref[IO, TaskId],
+      random: Random[IO],
+      xa: HikariTransactor[IO]
+  ): IO[Unit] =
+    Stream
+      .repeatEval(takeMessage(ref, random))
+      .parEvalMap(3)(message =>
         checkTaskIsPending(message.taskId).flatMap { isPending =>
           if (isPending) processTask(xa)(message).as(message)
           else IO(message)
         }
       )
-      .evalMap(message => recordTask(message.taskId).as(message))
+      .evalMap(message => recordTaskSuccess(message.taskId).as(message))
       .evalMap(message => commitOffset(message.offset))
-      .compile.drain
+      .compile
+      .drain
 
-
-  val ecResource: Resource[IO, ExecutionContext] = ExecutionContexts.fixedThreadPool[IO](1)
+  val ecResource: Resource[IO, ExecutionContext] =
+    ExecutionContexts.fixedThreadPool[IO](1)
 
   def run: IO[Unit] = {
     ecResource.use { ec =>

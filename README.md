@@ -225,3 +225,11 @@ Consider `processMessages`. It processes each message sequentially.
 
 1. Could we use `parEvalMap` to process these messages? 
 2. What would the consequences be of using `parEvalMapUnordered`?
+
+
+# Session 15 - Warm up exercise
+
+In this session, we'll take a look at error handling. The code has been amended such that the message time is an `Int`. 
+
+1. Should it be possible for the user to submit negative times? If so, would you expect an error?
+2. What possible errors can occur when querying the database? For each error, consider whether we should recover from it.
