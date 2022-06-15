@@ -233,3 +233,22 @@ In this session, we'll take a look at error handling. The code has been amended 
 
 1. Should it be possible for the user to submit negative times? If so, would you expect an error?
 2. What possible errors can occur when querying the database? For each error, consider whether we should recover from it.
+
+# Session 16 - Warm up exercise
+
+We'll explore error handling with the `egg` project.
+
+1. Run the `FryEggApp`:
+
+   ```
+   sbt
+   sbt> project egg
+   sbt:egg> run
+   ```
+
+   You should see an exception being thrown indicating `"The yolk broke during frying"`.
+
+2. Read through the `FryCook.fry` function to get a gist of what it does.
+3. Take a look at the `cookWithPower` function.
+   - What is the difference between throwing an exception and returning a value?
+   - Is this a pure function? If not, how could we make it pure?

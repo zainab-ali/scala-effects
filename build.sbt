@@ -46,3 +46,6 @@ lazy val messageQueue = (project in file("queue"))
       "com.github.fd4s" %% "fs2-kafka" % "2.5.0-M3"
     )
   )
+
+lazy val egg = (project in file("egg"))
+  .settings(commonSettings)
