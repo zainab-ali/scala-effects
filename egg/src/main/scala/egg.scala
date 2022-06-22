@@ -4,7 +4,9 @@ import cats.effect.IO
 import cats.effect.Ref
 import cats.effect.std.Queue
 import cats.effect.IOApp
+import cats.implicits._
 import fs2._
+import scala.util.control.NoStackTrace
 
 sealed trait RawEgg
 object RawEgg {
@@ -18,10 +20,10 @@ object CookedEgg {
   case object Scrambled extends CookedEgg
 }
 
-object RottenEgg extends Exception("The egg was rotten.")
-object YolkIsBroken extends Exception("The yolk broke during frying.")
-object Overcooked extends Exception("The egg is overcooked.")
-object PowerCut extends Exception("There is a power cut.")
+object RottenEgg extends Exception("The egg was rotten.") with NoStackTrace
+object YolkIsBroken extends Exception("The yolk broke during frying.") with NoStackTrace
+object Overcooked extends Exception("The egg is overcooked.") with NoStackTrace
+object PowerCut extends Exception("There is a power cut.") with NoStackTrace
 
 object FryCook {
 
@@ -35,16 +37,16 @@ object FryCook {
   def cook(power: Ref[IO, Boolean])(rawEgg: RawEgg.FreshEgg): IO[CookedEgg] = {
     power.get
       .flatMap { hasPower =>
-        if (!hasPower) IO.raiseError(PowerCut)
+        if (!hasPower) IO(throw PowerCut)
         else IO.unit
       }
-      .map { _ => cookWithPower(rawEgg) }
+      .flatMap { _ => IO(cookWithPower(rawEgg)).rethrow }
   }
 
-  def cookWithPower(rawEgg: RawEgg.FreshEgg): CookedEgg = {
-    if (rawEgg.yolkIsFragile) throw YolkIsBroken
-    else if (rawEgg.isSmall) throw Overcooked
-    else CookedEgg.Fried
+  def cookWithPower(rawEgg: RawEgg.FreshEgg): Either[Exception, CookedEgg] = {
+    if (rawEgg.yolkIsFragile) Left(YolkIsBroken)
+    else if (rawEgg.isSmall) Left(Overcooked)
+    else Right(CookedEgg.Fried)
   }
 
   // Task 1: If the yolk is broken during cooking, return a scrambled egg instead

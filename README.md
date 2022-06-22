@@ -252,3 +252,12 @@ We'll explore error handling with the `egg` project.
 3. Take a look at the `cookWithPower` function.
    - What is the difference between throwing an exception and returning a value?
    - Is this a pure function? If not, how could we make it pure?
+
+# Session 17 - warm up exercise
+
+1. Take a look at the [cats API docs for `ApplicativeError`](https://typelevel.org/cats/api/cats/ApplicativeError.html). In particular, look at the `handleError` and `recover` functions.
+2. The `crack` and `cook` functions capture errors in an `IO`: either function may fail. Consider how you can use the functions on `ApplicativeError` to perform the following tasks:
+ - If the yolk is broken during cooking, return a scrambled egg instead
+ - If the egg is rotten, crack another egg
+ - If there are any errors, print "Sorry! Something wen't wrong."
+
