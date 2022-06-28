@@ -261,3 +261,54 @@ We'll explore error handling with the `egg` project.
  - If the egg is rotten, crack another egg
  - If there are any errors, print "Sorry! Something wen't wrong."
 
+# Session 18 - warm up exercise
+
+In this session, we'll take a look at error handling and scopes.
+
+For reference, here is our current implementation of `fry`:
+
+```scala
+def fry(power: Ref[IO, Boolean], eggBox: Queue[IO, RawEgg]): IO[CookedEgg] = {
+  crack(eggBox).flatMap { egg =>
+    cook(power)(egg)
+	  .recover { case YolkIsBroken => CookedEgg.Scrambled }
+  }.handleErrorWith(_ => fry(power, eggBox))
+}
+```
+
+1. Consider the following implementation of `fry`, paying attention to the position of the `recover` function. Is the implementation correct?:
+
+
+```scala
+def fry(power: Ref[IO, Boolean], eggBox: Queue[IO, RawEgg]): IO[CookedEgg] = {
+  crack(eggBox).flatMap { egg =>
+	cook(power)(egg)
+  }.recover { case YolkIsBroken => CookedEgg.Scrambled }
+  .handleErrorWith(_ => fry(power, eggBox))
+}
+```
+
+2. What about the following implementation, paying attention to `handleErrorWith`?
+
+
+```scala
+def fry(power: Ref[IO, Boolean], eggBox: Queue[IO, RawEgg]): IO[CookedEgg] = {
+  crack(eggBox).flatMap { egg =>
+	cook(power)(egg)
+	  .recover { case YolkIsBroken => CookedEgg.Scrambled }
+	  .handleErrorWith(_ => fry(power, eggBox))
+  }
+}
+```
+
+3. What about the following implementation?
+
+```scala
+def fry(power: Ref[IO, Boolean], eggBox: Queue[IO, RawEgg]): IO[CookedEgg] = {
+  crack(eggBox).flatMap { egg =>
+    cook(power)(egg)
+  }
+  .handleErrorWith(_ => fry(power, eggBox))
+  .recover { case YolkIsBroken => CookedEgg.Scrambled }
+}
+```
