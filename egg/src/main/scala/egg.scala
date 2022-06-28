@@ -21,7 +21,9 @@ object CookedEgg {
 }
 
 object RottenEgg extends Exception("The egg was rotten.") with NoStackTrace
-object YolkIsBroken extends Exception("The yolk broke during frying.") with NoStackTrace
+object YolkIsBroken
+    extends Exception("The yolk broke during frying.")
+    with NoStackTrace
 object Overcooked extends Exception("The egg is overcooked.") with NoStackTrace
 object PowerCut extends Exception("There is a power cut.") with NoStackTrace
 
@@ -37,7 +39,7 @@ object FryCook {
   def cook(power: Ref[IO, Boolean])(rawEgg: RawEgg.FreshEgg): IO[CookedEgg] = {
     power.get
       .flatMap { hasPower =>
-        if (!hasPower) IO(throw PowerCut)
+        if (!hasPower) IO.raiseError(PowerCut)
         else IO.unit
       }
       .flatMap { _ => IO(cookWithPower(rawEgg)).rethrow }
@@ -53,9 +55,16 @@ object FryCook {
   // Task 2: If the egg is rotten, crack another egg
   // Task 3: If there are any errors, print "Sorry! Something wen't wrong."
   def fry(power: Ref[IO, Boolean], eggBox: Queue[IO, RawEgg]): IO[CookedEgg] = {
-    crack(eggBox).flatMap { egg =>
-      cook(power)(egg)
-    }
+
+    crack(eggBox)
+      .flatMap { egg =>
+        cook(power)(egg)
+          .recover { case YolkIsBroken =>
+            CookedEgg.Scrambled
+          }
+      }
+      .handleErrorWith(_ => fry(power, eggBox))
+
   }
 }
 
@@ -64,7 +73,7 @@ object FryEggApp extends IOApp.Simple {
   val eggBox: IO[Queue[IO, RawEgg]] = {
     Queue.unbounded[IO, RawEgg].flatMap { queue =>
       Stream[IO, RawEgg](
-        RawEgg.FreshEgg(yolkIsFragile = true, isSmall = false),
+//        RawEgg.FreshEgg(yolkIsFragile = true, isSmall = false),
         RawEgg.RottenEgg,
         RawEgg.FreshEgg(yolkIsFragile = true, isSmall = true)
       ).enqueueUnterminated(queue).compile.drain.as(queue)
