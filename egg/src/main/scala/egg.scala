@@ -4,8 +4,9 @@ import cats.effect.IO
 import cats.effect.Ref
 import cats.effect.std.Queue
 import cats.effect.IOApp
-import cats.implicits._
-import fs2._
+import cats.implicits.*
+import fs2.*
+
 import scala.util.control.NoStackTrace
 
 sealed trait RawEgg
@@ -56,16 +57,44 @@ object FryCook {
   // Task 3: If there are any errors, print "Sorry! Something wen't wrong."
   def fry(power: Ref[IO, Boolean], eggBox: Queue[IO, RawEgg]): IO[CookedEgg] = {
 
+    IO.println(s"We're about to crack an egg") >>
     crack(eggBox)
       .flatMap { egg =>
         cook(power)(egg)
-          .recover { case YolkIsBroken =>
-            CookedEgg.Scrambled
-          }
       }
+      // 1: Match not exhaustive error because RottenEggError is not called
+      //    It's a partial function, so the function doesn't need to be defined for that case
+      // What happens to the error if it isn't handled by `recover`?
+      //  - It remains the same
+      .recover { case YolkIsBroken =>
+        CookedEgg.Scrambled
+      }
+      // `flatTap` taps into the type of IO (CookedEgg), but the IO is in an "Exception" state, so this won't be printed
+      // IO is a fancy version of Either. There is a "failed" case for holding an exception
+      .flatTap(egg => IO.println(s"We have an egg $egg"))
       .handleErrorWith(_ => fry(power, eggBox))
 
+    IO.raiseError[CookedEgg](RottenEgg).flatTap(egg => IO.println(s"We have an egg $egg"))
   }
+
+  // IO[Either[EggError, Egg]]
+  // Monad transformers: EitherT
+  // Union types?
+  // Capture and convert errors
+
+  // The server dies if there are any errors
+  // What happens if a kafka stream fails?
+  // There's a global error handler in http4s, everything that isn't caught is 500
+}
+
+sealed trait EggResult
+
+object EggResult {
+  case class Egg(i: Int) extends EggResult
+  case object FragileEgg extends EggResult
+  case object BrokenEgg extends EggResult
+  case object MassiveEgg extends EggResult
+
 }
 
 object FryEggApp extends IOApp.Simple {
