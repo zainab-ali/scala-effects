@@ -312,3 +312,46 @@ def fry(power: Ref[IO, Boolean], eggBox: Queue[IO, RawEgg]): IO[CookedEgg] = {
   .recover { case YolkIsBroken => CookedEgg.Scrambled }
 }
 ```
+# Session 19 - warm up exercise
+
+In this session, we'll experiment with the order in which we handle errors.
+
+For reference, here is our current implementation of `fry`:
+
+```scala
+def fry(power: Ref[IO, Boolean], eggBox: Queue[IO, RawEgg]): IO[CookedEgg] = {
+  crack(eggBox).flatMap { egg =>
+    cook(power)(egg) // Previous position of `recover` handler
+  }
+  .recover { case YolkIsBroken => CookedEgg.Scrambled } // Current position
+  .handleErrorWith(_ => fry(power, eggBox))
+}
+```
+
+We saw that moving the `recover` handler did not change the behaviour.
+
+1. What about the following implementation? Are `YolkIsBroken` exceptions handled in the same way?
+
+```scala
+def fry(power: Ref[IO, Boolean], eggBox: Queue[IO, RawEgg]): IO[CookedEgg] = {
+  crack(eggBox).flatMap { egg =>
+    cook(power)(egg)
+  }
+  .handleErrorWith(_ => fry(power, eggBox))
+  .recover { case YolkIsBroken => CookedEgg.Scrambled }
+}
+```
+
+
+2. What about the following implementation, paying attention to the position of `handleErrorWith`? Are `RottenEgg` exceptions still handled in the same way?
+
+```scala
+def fry(power: Ref[IO, Boolean], eggBox: Queue[IO, RawEgg]): IO[CookedEgg] = {
+  crack(eggBox).flatMap { egg =>
+	cook(power)(egg)
+	  .recover { case YolkIsBroken => CookedEgg.Scrambled }
+	  .handleErrorWith(_ => fry(power, eggBox))
+  }
+}
+```
+
