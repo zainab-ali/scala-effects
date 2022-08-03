@@ -1,4 +1,4 @@
-package egg
+package numbers
 
 import cats.effect.IO
 import cats.effect.IOApp
@@ -8,27 +8,23 @@ import cats.effect.implicits.*
 import fs2.*
 import scala.util.control.NoStackTrace
 
-object DownloadFailed extends Exception with NoStackTrace
+object DownloadFailed extends Exception("The file was not present in S3") with NoStackTrace
 object ParsingFailed extends Exception with NoStackTrace
 object ConnectionFailed extends Exception with NoStackTrace
 object InsertFailed extends Exception with NoStackTrace
 
 case class Message(
-    downloadFailure: Boolean,
+    fileIsAbsent: Boolean,
     connectionFailure: Boolean,
     file: List[String]
 )
 
-final class Processor(messageQueue: Queue[IO, Message]) {
+object MessageProcessor {
 
-  val takeMessage: IO[Message] = messageQueue.take
-    .flatTap(_ => IO.println("Took message"))
-
-
-  def process(message: Message): Stream[IO, Unit] = {
+   def process(message: Message): Stream[IO, Unit] = {
 
     val downloadFile: IO[Stream[IO, String]] =
-      IO.raiseWhen(message.downloadFailure)(DownloadFailed)
+      IO.raiseWhen(message.fileIsAbsent)(DownloadFailed)
         .as(Stream.emits(message.file))
         .flatTap(_ => IO.println("Downloaded file."))
 
@@ -37,10 +33,10 @@ final class Processor(messageQueue: Queue[IO, Message]) {
         .flatTap(_ => IO.println(s"Decoded row $row."))
 
 
-    def writeToPostgres(userId: Int): IO[Unit] =
+    def writeToPostgres(number: Int): IO[Unit] =
       IO.raiseWhen(message.connectionFailure)(ConnectionFailed)
-        .flatMap(_ => IO.raiseWhen(userId < 0)(InsertFailed))
-        .flatTap(_ => IO.println(s"Written user id $userId to postgres."))
+        .flatMap(_ => IO.raiseWhen(number < 0)(InsertFailed))
+        .flatTap(_ => IO.println(s"Written number $number to postgres."))
 
     val commitOffset: IO[Unit] = IO.println("Committing offset.")
 
@@ -51,18 +47,24 @@ final class Processor(messageQueue: Queue[IO, Message]) {
       .evalMap(writeToPostgres)
       .evalMap(_ => commitOffset)
   }
+}
+
+final class Processor(messageQueue: Queue[IO, Message]) {
+
+  val takeMessage: IO[Message] = messageQueue.take
+    .flatTap(_ => IO.println("Took message"))
 
   val run: Stream[IO, Unit] =
     Stream
       .repeatEval(takeMessage)
-      .flatMap(process)
+      .flatMap(MessageProcessor.process)
 }
 
 object Numbers extends IOApp.Simple {
 
   val messages: List[Message] = List(
     Message(
-      downloadFailure = false,
+      fileIsAbsent = false,
       connectionFailure = false,
       file = List("1", "2", "3")
     )

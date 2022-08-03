@@ -49,3 +49,13 @@ lazy val messageQueue = (project in file("queue"))
 
 lazy val egg = (project in file("egg"))
   .settings(commonSettings)
+
+lazy val numbers = (project in file("numbers"))
+  .settings(commonSettings)
+  .settings(
+    testFrameworks += new TestFramework("weaver.framework.CatsEffect"),
+    libraryDependencies ++=
+      Seq(
+        "com.disneystreaming" %% "weaver-core" % "0.7.9" % "test",
+        "com.disneystreaming" %% "weaver-cats" % "0.7.9" % "test"
+      ))
