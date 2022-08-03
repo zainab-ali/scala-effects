@@ -355,3 +355,17 @@ def fry(power: Ref[IO, Boolean], eggBox: Queue[IO, RawEgg]): IO[CookedEgg] = {
 }
 ```
 
+# Session 22 - Warm up exercise
+
+Take a look at the `numbers` project:
+
+```
+sbt 
+> project numbers
+> compile
+> test
+```
+
+ - Run the code with `sbt run`
+ - Test the code with `sbt test`
+ - You'll see some tests in `NumbersTest` that are failing. How can you use the `handleError` functions to implement the correct behaviour?
