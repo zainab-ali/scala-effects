@@ -84,7 +84,7 @@ object Numbers extends IOApp.Simple {
     )
   )
 
-  private val messageQueueIO: IO[Queue[IO, Message]] = {
+  private val setup: IO[Queue[IO, Message]] = {
     Queue.unbounded[IO, Message].flatMap { queue =>
       Stream.emits(messages).enqueueUnterminated(queue).compile.drain.as(queue)
     }
@@ -92,8 +92,8 @@ object Numbers extends IOApp.Simple {
 
   override val run: IO[Unit] =
     Stream
-      .eval(messageQueueIO)
-      .flatMap(queue => new Processor(queue).run)
+      .eval(setup)
+      .flatMap(new Processor(_).run)
       .compile
       .drain
 

@@ -369,3 +369,34 @@ sbt
  - Run the code with `sbt run`
  - Test the code with `sbt test`
  - You'll see some tests in `NumbersTest` that are failing. How can you use the `handleError` functions to implement the correct behaviour?
+
+# Session 23 - Warm up exercise
+
+Take a look at the `numbers.scala` file.
+
+1. In the last session, we changed the signature of `process` from:
+
+	```scala
+	def process(message: Message): Stream[IO, Unit]
+	```
+
+	to:
+
+	```scala
+	def process(message: Message): IO[Unit]
+	```
+
+	We did this by "compiling" the stream into an `IO` using `stream.compile.drain`.
+
+	How is the resulting `IO` different from the stream?
+		- Will it ever time out, where the stream wouldn't?
+		- Will it hold more data in memory than the stream?
+
+2. The signature for `run` is as follows:
+
+   ```scala
+   val run: Stream[IO, Unit]
+   ```
+
+	- What is the meaning of `Unit` in this signature?
+	- Would this function signature be better as `val run: IO[Unit]`?
