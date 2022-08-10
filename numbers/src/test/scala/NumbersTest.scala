@@ -10,7 +10,7 @@ object NumbersSuite extends SimpleIOSuite {
     val message: Message = Message(
       fileIsAbsent = true,
       connectionFailure = false,
-      file = List("1", "2", "3")
+      lines = List("1", "2", "3")
     )
     process(message).as(failure("unimplemented"))
   }
@@ -19,7 +19,7 @@ object NumbersSuite extends SimpleIOSuite {
     val message: Message = Message(
       fileIsAbsent = false,
       connectionFailure = false,
-      file = List("1", "not-a-number", "3")
+      lines = List("1", "not-a-number", "3")
     )
     process(message).as(failure("unimplemented"))
   }
@@ -28,7 +28,7 @@ object NumbersSuite extends SimpleIOSuite {
     val message: Message = Message(
       fileIsAbsent = false,
       connectionFailure = false,
-      file = List("1", "-42", "3")
+      lines = List("1", "-42", "3")
     )
     process(message).as(failure("unimplemented"))
   }
@@ -37,7 +37,7 @@ object NumbersSuite extends SimpleIOSuite {
     val message: Message = Message(
       fileIsAbsent = false,
       connectionFailure = true,
-      file = List("1", "2", "3")
+      lines = List("1", "2", "3")
     )
     process(message).as(failure("unimplemented"))
   }
