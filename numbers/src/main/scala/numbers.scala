@@ -23,7 +23,7 @@ case class Message(
 
 object MessageProcessor {
 
-  def process(message: Message): IO[Unit] = {
+  def processStream1(message: Message): Stream[IO, Unit] = {
 
     val downloadFile: IO[Stream[IO, String]] =
       IO.raiseWhen(message.fileIsAbsent)(DownloadFailed)
@@ -45,11 +45,22 @@ object MessageProcessor {
       .flatten
       .evalMap(decodeRow)
       .evalMap(writeToPostgres)
-      .compile
-      .drain
+      .handleErrorWith(e => Stream.eval(IO.println(s"HERE: $e")))
   }
+
+  def process(message: Message): IO[Unit] = {
+    processStream1(message).compile.drain
+  }
+  def processStream(message: Message): Stream[IO, Unit] =
+    Stream.eval(process(message))
 }
 
+// RECAP:
+// - Think carefully as to whether we should return Stream or IO
+//   - It depends on whether you want the client to be able compose the stream
+//      - Whether the client wants to compose the stream
+// - The IO has the same time and memory properties
+// - We should pay attention to the types within the stream
 final class Processor(messageQueue: Queue[IO, Message]) {
 
   val takeMessage: IO[Message] = messageQueue.take
@@ -59,9 +70,14 @@ final class Processor(messageQueue: Queue[IO, Message]) {
 
   val run: Stream[IO, Unit] =
     Stream
-      .repeatEval(takeMessage)
-      .evalMap(message => MessageProcessor.process(message).handleErrorWith(e => IO.println(s"failed: $e")))
-      .evalMap(_ => commitOffset)
+      .repeatEval(takeMessage) // taking
+      // .flatMap(MessageProcessor.processStream1)
+      .evalMap(message =>  // work IO not Stream
+        MessageProcessor.process(message)
+        .handleErrorWith(e => IO.println(s"failed: $e"))
+        )
+        // Let's have a look at our services!
+      .evalMap(_ => commitOffset) // committing
 }
 
 object Numbers extends IOApp.Simple {
@@ -75,7 +91,7 @@ object Numbers extends IOApp.Simple {
     Message(
       fileIsAbsent = false,
       connectionFailure = false,
-      lines = List("1", "2", "3")
+      lines = List("1", "-2", "3")
     ),
     Message(
       fileIsAbsent = false,
