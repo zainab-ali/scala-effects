@@ -400,3 +400,24 @@ Take a look at the `numbers.scala` file.
 
 	- What is the meaning of `Unit` in this signature?
 	- Would this function signature be better as `val run: IO[Unit]`?
+
+
+# Session 25 - Warm up exercise
+
+Take a look at the `egg` project:
+
+```
+sbt 
+> project egg
+> compile
+```
+
+Run the code with `sbt run`.
+ - What happens when the egg taken from the egg box is rotten?
+ - Try and write a function with the following signature:
+ ```scala
+   def crackAndRetry(eggBox: Queue[IO, RawEgg]): IO[RawEgg.FreshEgg] = ???
+ ```
+ 
+ This function should call `crack`, but crack another egg if the egg is rotten.
+

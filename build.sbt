@@ -49,6 +49,12 @@ lazy val messageQueue = (project in file("queue"))
 
 lazy val egg = (project in file("egg"))
   .settings(commonSettings)
+  .settings(
+    libraryDependencies ++= Seq(
+      "com.github.cb372" %% "cats-retry" % "3.1.0"
+    )
+  )
+
 
 lazy val numbers = (project in file("numbers"))
   .settings(commonSettings)
