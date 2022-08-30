@@ -6,6 +6,7 @@ import cats.effect.std.Queue
 import cats.effect.IOApp
 import cats.implicits.*
 import fs2.*
+import retry.*
 
 import scala.util.control.NoStackTrace
 
@@ -29,10 +30,33 @@ object Overcooked extends Exception("The egg is overcooked.") with NoStackTrace
 object PowerCut extends Exception("There is a power cut.") with NoStackTrace
 
 object FryCook {
+   import scala.concurrent.duration._
 
-  def crack(eggBox: Queue[IO, RawEgg]): IO[RawEgg.FreshEgg] = {
+  val policy = RetryPolicies.constantDelay[IO](2.seconds)
+
+//  def apply[M[_]](
+//                   policy: RetryPolicy[M],
+//                   wasSuccessful: A => M[Boolean],
+//                   onFailure: (A, RetryDetails) => M[Unit]
+//                 )(
+//                   action: => M[A]
+//                 )(implicit
+  def onFailure(failedValue: RawEgg, details: RetryDetails): IO[Unit] = {
+    IO(println(s"Mao says retry $details"))
+  }
+
+  def mao(eggBox: Queue[IO, RawEgg]): IO[RawEgg.FreshEgg] = retryingOnFailures[RawEgg].apply[IO](policy,
+    (a: RawEgg) => {
+      a match
+        case RawEgg.FreshEgg(yolkIsFragile, isSmall) =>IO.pure(true)
+        case RawEgg.RottenEgg => IO.pure(false)
+    },
+    onFailure
+  )(crack(eggBox))
+
+  def crack(eggBox: Queue[IO, RawEgg]): IO[RawEgg] = {
     eggBox.take.flatMap {
-      case RawEgg.RottenEgg     => IO.raiseError(RottenEggError)
+      case re @ RawEgg.RottenEgg => IO.pure(re)
       case egg: RawEgg.FreshEgg => IO.pure(egg)
     }
   }
@@ -59,7 +83,7 @@ object FryCook {
 
     IO.println(s"We're about to crack an egg")
       .flatMap { _ =>
-        crack(eggBox)
+        mao(eggBox)
           .flatMap(egg =>
             {
               IO.println(s"We cracked an egg: $egg").as(egg)
@@ -73,14 +97,14 @@ object FryCook {
             IO.println("The yolk is broken! We're scrambling the egg.")
               .as(CookedEgg.Scrambled)
           }
-          .handleErrorWith(err =>
-            IO.println(s"We're about to handle the error: $err").flatMap(_ =>
-            fry(power, eggBox)
-              .flatTap(egg =>
-                IO.println(s"We handled the error: $err with $egg")
-              )
-            )
-          )
+//          .handleErrorWith(err =>
+//            IO.println(s"We're about to handle the error: $err").flatMap(_ =>
+//            fry(power, eggBox)
+//              .flatTap(egg =>
+//                IO.println(s"We handled the error: $err with $egg")
+//              )
+//            )
+//          )
       }
       .flatTap((egg: CookedEgg) => IO.println(s"We cooked an egg: $egg"))
   }
