@@ -30,35 +30,34 @@ object Overcooked extends Exception("The egg is overcooked.") with NoStackTrace
 object PowerCut extends Exception("There is a power cut.") with NoStackTrace
 
 object FryCook {
-   import scala.concurrent.duration._
 
-  val policy = RetryPolicies.constantDelay[IO](2.seconds)
+  import scala.concurrent.duration._
 
-//  def apply[M[_]](
-//                   policy: RetryPolicy[M],
-//                   wasSuccessful: A => M[Boolean],
-//                   onFailure: (A, RetryDetails) => M[Unit]
-//                 )(
-//                   action: => M[A]
-//                 )(implicit
-  def onFailure(failedValue: RawEgg, details: RetryDetails): IO[Unit] = {
-    IO(println(s"Mao says retry $details"))
-  }
-
-  def mao(eggBox: Queue[IO, RawEgg]): IO[RawEgg.FreshEgg] = retryingOnFailures[RawEgg].apply[IO](policy,
-    (a: RawEgg) => {
-      a match
-        case RawEgg.FreshEgg(yolkIsFragile, isSmall) =>IO.pure(true)
-        case RawEgg.RottenEgg => IO.pure(false)
-    },
-    onFailure
-  )(crack(eggBox))
-
-  def crack(eggBox: Queue[IO, RawEgg]): IO[RawEgg] = {
+  def crack(eggBox: Queue[IO, RawEgg]): IO[RawEgg.FreshEgg] = {
     eggBox.take.flatMap {
-      case re @ RawEgg.RottenEgg => IO.pure(re)
+      case re @ RawEgg.RottenEgg => IO.raiseError(RottenEggError)
       case egg: RawEgg.FreshEgg => IO.pure(egg)
     }
+  }
+
+  def crackAndRetry(eggBox: Queue[IO, RawEgg]): IO[RawEgg.FreshEgg] = {
+    val policy = RetryPolicies.constantDelay[IO](2.seconds)
+
+    def onFailure(failedValue: RawEgg, details: RetryDetails): IO[Unit] = {
+      IO(println(s"Retrying on $failedValue: $details"))
+    }
+
+    def isSuccessful(value: RawEgg): IO[Boolean] =
+      value match {
+        case RawEgg.FreshEgg(yolkIsFragile, isSmall) => IO.pure(true)
+        case RawEgg.RottenEgg => IO.pure(false)
+      }
+
+    val action: IO[RawEgg.FreshEgg] = crack(eggBox)
+    retryingOnFailures(policy,
+      isSuccessful,
+      onFailure
+    )(action)
   }
 
   def cook(power: Ref[IO, Boolean])(rawEgg: RawEgg.FreshEgg): IO[CookedEgg] = {
@@ -83,7 +82,7 @@ object FryCook {
 
     IO.println(s"We're about to crack an egg")
       .flatMap { _ =>
-        mao(eggBox)
+        crackAndRetry(eggBox)
           .flatMap(egg =>
             {
               IO.println(s"We cracked an egg: $egg").as(egg)

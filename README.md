@@ -421,3 +421,45 @@ Run the code with `sbt run`.
  
  This function should call `crack`, but crack another egg if the egg is rotten.
 
+
+# Session 26 - Warm up exercise
+
+In the previous session, we attempted to retry the following action:
+
+```scala
+def crack(eggBox: Queue[IO, RawEgg]): IO[RawEgg.FreshEgg] = {
+  eggBox.take.flatMap {
+    case re @ RawEgg.RottenEgg => IO.raiseError(RottenEggError)
+    case egg: RawEgg.FreshEgg => IO.pure(egg)
+  }
+}
+
+```
+
+We did so as follows:
+
+```scala
+def crackAndRetry(eggBox: Queue[IO, RawEgg]): IO[RawEgg.FreshEgg] = {
+  val policy = RetryPolicies.constantDelay[IO](2.seconds)
+
+  def onFailure(failedValue: RawEgg, details: RetryDetails): IO[Unit] = {
+    IO(println(s"Retrying on $failedValue: $details"))
+  }
+
+  def isSuccessful(value: RawEgg): IO[Boolean] =
+    value match {
+      case RawEgg.FreshEgg(yolkIsFragile, isSmall) => IO.pure(true)
+      case RawEgg.RottenEgg => IO.pure(false)
+    }
+
+  val action: IO[RawEgg.FreshEgg] = crack(eggBox)
+  retryingOnFailures(policy,
+    isSuccessful,
+    onFailure
+  )(action)
+}
+```
+
+ - Run the app. Does the current solution retry on rotten eggs?
+ - Will the `action` ever result in an `IO[RawEgg.RottenEgg]`?
+ - Will the `isSuccessful` function ever result in an `IO(false)`?
