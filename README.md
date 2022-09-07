@@ -463,3 +463,20 @@ def crackAndRetry(eggBox: Queue[IO, RawEgg]): IO[RawEgg.FreshEgg] = {
  - Run the app. Does the current solution retry on rotten eggs?
  - Will the `action` ever result in an `IO[RawEgg.RottenEgg]`?
  - Will the `isSuccessful` function ever result in an `IO(false)`?
+
+# Session 27 - Warm up exercise
+
+In the past few sessions, we've examined error handling with `IO`. This time, we'll take a look at error handling with `fs2.Stream.`
+
+The `FrySeveralEggsApp` in `egg.scala` is meant to repeatedly cracks and cooks eggs.
+
+ - Run the app. Why does it raise an exception?
+ - Can we recover from the error using `Stream.handleErrorWith`? If not, why?
+ 
+```scala
+Stream
+  .repeatEval(FryCook.crack(eggBox))
+  .handleErrorWith(err => ...)
+  .evalMap(FryCook.cook(power))
+```
+ - What other functions on `Stream` enable us to handle this error?

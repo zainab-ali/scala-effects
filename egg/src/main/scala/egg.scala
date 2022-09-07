@@ -64,21 +64,6 @@ object FryCook {
 
     val action: IO[RawEgg.FreshEgg] = crack(eggBox)
 
-//    val rv: IO[RawEgg] =
-//      retryingOnFailures(policy, isSuccessful, onFailure)(action)
-
-    /** def retryingOnFailures[M[_]: Monad: Sleep, A](policy: RetryPolicy[M],
-      *                                              wasSuccessful: A => M[Boolean],
-      *                                              onFailure: (A, RetryDetails) => M[Unit])
-      *                                              (action: => M[A]): M[A]
-      *
-      * def retryingOnSomeErrors[M[_]: Sleep, A, E](policy: RetryPolicy[M],
-      *                                            isWorthRetrying: E => M[Boolean],
-      *                                            onError: (E, RetryDetails) => M[Unit])
-      *                                           (action: => M[A])
-      *                                           (implicit ME: MonadError[M, E]): M[A]
-      */
-
     retryingOnSomeErrors(policy, isWorthRetrying = isIOException, onError)(
       action
     )
@@ -99,9 +84,6 @@ object FryCook {
     else Right(CookedEgg.Fried)
   }
 
-  // Task 1: What happens if the RawEgg is rotten?
-  // Task 2: If the egg is rotten, crack another egg
-  // Task 3: If there are any errors, print "Sorry! Something wen't wrong."
   def fry(power: Ref[IO, Boolean], eggBox: Queue[IO, RawEgg]): IO[CookedEgg] = {
 
     IO.println(s"We're about to crack an egg")
@@ -117,14 +99,6 @@ object FryCook {
             IO.println("The yolk is broken! We're scrambling the egg.")
               .as(CookedEgg.Scrambled)
           }
-//          .handleErrorWith(err =>
-//            IO.println(s"We're about to handle the error: $err").flatMap(_ =>
-//            fry(power, eggBox)
-//              .flatTap(egg =>
-//                IO.println(s"We handled the error: $err with $egg")
-//              )
-//            )
-//          )
       }
       .flatTap((egg: CookedEgg) => IO.println(s"We cooked an egg: $egg"))
   }
@@ -175,7 +149,8 @@ object FrySeveralEggsApp extends IOApp.Simple {
       power <- power
       eggBox <- eggBox
       eggs <- Stream
-        .repeatEval(FryCook.fry(power, eggBox))
+        .repeatEval(FryCook.crack(eggBox))
+        .evalMap(FryCook.cook(power))
         .take(2)
         .compile
         .toList
