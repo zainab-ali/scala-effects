@@ -36,7 +36,7 @@ object FryCook {
   def crack(eggBox: Queue[IO, RawEgg]): IO[RawEgg.FreshEgg] = {
     eggBox.take.flatMap {
       case re @ RawEgg.RottenEgg => IO.raiseError(RottenEggError)
-      case egg: RawEgg.FreshEgg => IO.pure(egg)
+      case egg: RawEgg.FreshEgg  => IO.pure(egg)
     }
   }
 
@@ -50,14 +50,38 @@ object FryCook {
     def isSuccessful(value: RawEgg): IO[Boolean] =
       value match {
         case RawEgg.FreshEgg(yolkIsFragile, isSmall) => IO.pure(true)
-        case RawEgg.RottenEgg => IO.pure(false)
+        case RawEgg.RottenEgg                        => IO.pure(false)
       }
 
+    def isIOException(e: Throwable): IO[Boolean] = e match {
+      case RottenEggError => IO.pure(true)
+      case _              => IO.pure(false)
+    }
+
+    def onError(err: Throwable, details: RetryDetails): IO[Unit] = {
+      IO(println(s"Retrying on ${err.getMessage}: $details"))
+    }
+
     val action: IO[RawEgg.FreshEgg] = crack(eggBox)
-    retryingOnFailures(policy,
-      isSuccessful,
-      onFailure
-    )(action)
+
+//    val rv: IO[RawEgg] =
+//      retryingOnFailures(policy, isSuccessful, onFailure)(action)
+
+    /** def retryingOnFailures[M[_]: Monad: Sleep, A](policy: RetryPolicy[M],
+      *                                              wasSuccessful: A => M[Boolean],
+      *                                              onFailure: (A, RetryDetails) => M[Unit])
+      *                                              (action: => M[A]): M[A]
+      *
+      * def retryingOnSomeErrors[M[_]: Sleep, A, E](policy: RetryPolicy[M],
+      *                                            isWorthRetrying: E => M[Boolean],
+      *                                            onError: (E, RetryDetails) => M[Unit])
+      *                                           (action: => M[A])
+      *                                           (implicit ME: MonadError[M, E]): M[A]
+      */
+
+    retryingOnSomeErrors(policy, isWorthRetrying = isIOException, onError)(
+      action
+    )
   }
 
   def cook(power: Ref[IO, Boolean])(rawEgg: RawEgg.FreshEgg): IO[CookedEgg] = {
@@ -83,12 +107,9 @@ object FryCook {
     IO.println(s"We're about to crack an egg")
       .flatMap { _ =>
         crackAndRetry(eggBox)
-          .flatMap(egg =>
-            {
-              IO.println(s"We cracked an egg: $egg").as(egg)
-            }
-
-          )
+          .flatMap(egg => {
+            IO.println(s"We cracked an egg: $egg").as(egg)
+          })
           .flatMap { (egg: RawEgg.FreshEgg) =>
             cook(power)(egg)
           }
