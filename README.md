@@ -480,3 +480,16 @@ Stream
   .evalMap(FryCook.cook(power))
 ```
  - What other functions on `Stream` enable us to handle this error?
+
+# Session 28 - Warm up exercise
+
+This session will kick off the topic of resources.
+
+Take a look at the `reader` project. This reads a file, `cats.txt`, prints the first line, then sleeps.
+
+ 1. Check that you can compile and run the app.
+ 2. The following command gets a list of open file descriptors and searches it for `cats.txt`:
+    ```
+    ps | grep App | cut -d' ' -f 1 | head -n 1 | xargs lsof -p | grep cats.txt
+	```
+	Run the command while running the app. What does it tell you about `scala.io.Source`?

@@ -55,6 +55,8 @@ lazy val egg = (project in file("egg"))
     )
   )
 
+lazy val reader = (project in file("reader"))
+  .settings(commonSettings)
 
 lazy val numbers = (project in file("numbers"))
   .settings(commonSettings)
