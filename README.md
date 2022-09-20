@@ -493,3 +493,25 @@ Take a look at the `reader` project. This reads a file, `cats.txt`, prints the f
     ps | grep App | cut -d' ' -f 1 | head -n 1 | xargs lsof -p | grep cats.txt
 	```
 	Run the command while running the app. What does it tell you about `scala.io.Source`?
+
+# Session 29 - Warm up exercise
+
+Take a look at the `reader.scala` file:
+
+Which of these expressions constructs an `IO` that reads five lines from the `cats.txt` file?
+
+```scala
+// Option 1
+range.traverse(_ => sourceResource.flatMap(s => printLine(s).toResource)).use_
+
+// Option 2
+range.traverse(_ => sourceResource.use(printLine)).void
+
+// Option 3
+sourceResource.use(s => range.traverse(_ => printLine(s))).void
+
+// Option 4
+sourceResource.flatMap(s => range.traverse(_ => printLine(s).toResource)).use_
+```
+
+For each expression, figure out how many times the source file is opened and closed. 
