@@ -515,3 +515,26 @@ sourceResource.flatMap(s => range.traverse(_ => printLine(s).toResource)).use_
 ```
 
 For each expression, figure out how many times the source file is opened and closed. 
+
+# Session 30: Warm up exercise
+
+The following code in `reader.scala` reads five lines from the file:
+
+```scala
+val range: List[Int] = (0 until 5).toList
+sourceResource.use(s => range.traverse(_ => printLine(s))).void
+```
+
+We can define a `sourceStream` as follows:
+
+```scala
+val sourceStream: Stream[IO, Source] = Stream.resource(sourceResource)
+```
+
+ 1. How many elements can this stream contain?
+ 2. Combine this stream with the `printLine` function to print lines from the file such that the following code prints five lines:
+ 
+    ```scala
+    val printLineStream: Stream[IO, Unit] = ???
+    printLineStream.take(5).compile.drain
+	```

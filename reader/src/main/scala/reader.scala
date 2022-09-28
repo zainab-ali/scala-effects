@@ -40,41 +40,10 @@ object ReadFileApp extends IOApp.Simple {
     // ps | grep App | cut -d' ' -f 1 | head -n 1 | xargs lsof -p | grep cats.txt
 
     val range: List[Int] = (0 until 5).toList
+    sourceResource.use(s => range.traverse(_ => printLine(s))).void
 
-    // Task: Which of these expressions reads five lines from the file?
-    // Option 1
-//    val p = sourceResource.flatMap(s => printLine(s).toResource)
-//    val s: Resource[IO, List[Unit]] = range.traverse(_ => sourceResource.flatMap(s => printLine(s).toResource))
-//    val r = p.flatMap(_ => p.flatMap(_ => p))
-//    val t: IO[Unit] = r.use_
-//
-//    t
-    // Option 2
-//     range.traverse(_ => sourceResource.use(printLine)).void
-
-    // Option 3
-     sourceResource.use(s => range.traverse(_ => {
-       printLine(s)
-       printLine(s).toResource.use_
-     })).void
-
-    val s1: Resource[IO, Source] = sourceResource
-    val s2: Resource[IO, Source] = sourceResource.use(s => s.pure[IO]).toResource
-    // sourceResource.use(s => s.pure[IO])
-    val s3: IO[Source] = openSource.flatMap { s =>
-      s.pure[IO].flatMap { _ =>
-        IO(s.close())
-      }
-    }
-
-    // Option 4
-    s1.flatMap(s => range.traverse(_ => {
-      printLine(s).toResource
-    })).use_
+    val sourceStream: Stream[IO, Source] = Stream.resource(sourceResource)
+    val printLineStream: Stream[IO, Unit] = ???
+    printLineStream.take(5).compile.drain
   }
-
-  class FileService() {
-    def getSource(fileNme: String): Resource[IO, Source] = ???
-  }
-
 }
