@@ -538,3 +538,12 @@ val sourceStream: Stream[IO, Source] = Stream.resource(sourceResource)
     val printLineStream: Stream[IO, Unit] = ???
     printLineStream.take(5).compile.drain
 	```
+
+# Session 31: Warm up exercise
+
+Take a look at the `ref` project. The `ref.scala` file contains its main app.
+
+The app defines a `counter` cats-effect `Ref` that should contain the number of cats printed.
+
+1. Run the app to print out a list of four cat names.
+2. Update the counter each time a cat is printed by using the `updateCount` pipe.

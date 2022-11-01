@@ -67,3 +67,6 @@ lazy val numbers = (project in file("numbers"))
         "com.disneystreaming" %% "weaver-core" % "0.7.9" % "test",
         "com.disneystreaming" %% "weaver-cats" % "0.7.9" % "test"
       ))
+
+lazy val ref = (project in file("ref"))
+  .settings(commonSettings)
