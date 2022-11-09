@@ -20,7 +20,7 @@ object CatNamesApp extends IOApp.Simple {
   def run: IO[Unit] = {
     val counterRef: IO[Ref[IO, Int]] = Ref.of[IO, Int](0)
     counterRef.flatMap { (counter: Ref[IO, Int]) =>
-      manyCats.traverse(_ => incrementCount(counter))
+      manyCats.parTraverse(_ => incrementCount(counter))
       .flatMap(_ => printCount(counter))
     }
 
