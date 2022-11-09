@@ -15,9 +15,9 @@ object CatNamesApp extends IOApp.Simple {
     IO.println(s"Counting $name").flatMap(_ => incrementCount(counter))
 
   def incrementCount(counter: Ref[IO, Int]): IO[Unit] =
-    counter.get.flatMap(currentvalue =>
-      IO.println(s"Incrementing the counter from $currentvalue.")
-        .flatMap(_ => counter.set(currentvalue + 1)))
+    counter.tryUpdate(_ + 1).flatMap { wasSuccessful =>
+      IO.println(s"Incrementing the counter was successful: $wasSuccessful.")
+    }
 
   def printCount(counter: Ref[IO, Int]): IO[Unit] =
     counter.get.flatMap(c => IO.println(s"There are $c cats."))
