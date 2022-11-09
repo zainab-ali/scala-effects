@@ -547,3 +547,35 @@ The app defines a `counter` cats-effect `Ref` that should contain the number of 
 
 1. Run the app to print out a list of four cat names.
 2. Update the counter each time a cat is printed by using the `updateCount` pipe.
+
+# Session 32: Warm up exercise
+
+Run the app. You should see at least 8 cat names printed:
+
+```
+sbt:ref> run
+[info] running (fork) ref.CatNamesApp
+[info] Mao
+[info] Mao
+[info] We're incrementing 0
+[info] We're incrementing 0
+[info] Maru
+[info] Maru
+[info] We're incrementing 1
+[info] We're incrementing 2
+[info] Popcorn
+[info] Popcorn
+[info] We're incrementing 3
+[info] We're incrementing 3
+[info] Mao
+[info] Mao
+[info] We're incrementing 4
+[info] We're incrementing 4
+[info] Maru
+[info] Maru
+[info] We're incrementing 5
+[info] We're incrementing 5
+[info] There are 6 cats.
+```
+
+Why did the counter increment 6 times?
