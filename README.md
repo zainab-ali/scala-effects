@@ -579,3 +579,12 @@ sbt:ref> run
 ```
 
 Why did the counter increment 6 times?
+
+# Session 34: Warm up exercise
+
+Take a look at the `streamref.CatNamesApp` in the `ref` package. This uses a counter to keep track of the number of times a cat name is printed.
+
+
+1. Do you need to use a `ref` to keep track of the count? Take a look at the functions in [fs2](https://javadoc.io/doc/co.fs2/fs2-core_3/3.4.0/index.html) and see if you can do so using stream utilities instead.
+
+2. What happens if an error is raised in the stream? Use `printCatOrError` to raise an error when `"Popcorn"` is encountered. 
