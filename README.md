@@ -588,3 +588,11 @@ Take a look at the `streamref.CatNamesApp` in the `ref` package. This uses a cou
 1. Do you need to use a `ref` to keep track of the count? Take a look at the functions in [fs2](https://javadoc.io/doc/co.fs2/fs2-core_3/3.4.0/index.html) and see if you can do so using stream utilities instead.
 
 2. What happens if an error is raised in the stream? Use `printCatOrError` to raise an error when `"Popcorn"` is encountered. 
+
+# Session 35: Warm up exercise
+
+Take a look at the `streamref.CatNamesApp` in the `ref` package. This uses a ref to keep track of the `State` of a stream.
+
+
+1. Read through the code. How does `requestCancellation` cancel the stream?
+2. Run the app. Has the stream been cancelled?

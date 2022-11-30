@@ -12,39 +12,43 @@ import fs2.*
 
 object CatNamesApp extends IOApp.Simple {
 
+  sealed trait State
+  object State {
+    object Running extends State
+    object Finished extends State
+    object Cancelled extends State
+  }
+
   def manyCats: Stream[IO, String] =
-    Stream("Mao", "Maru", "Popcorn").repeatN(10)
+    Stream("Mao", "Maru", "Popcorn").repeatN(100)
 
+  def printCat: Pipe[IO, String, String] =
+    _.evalTap(IO.println)
 
-  def printCatOrError(name: String): IO[String] =
-    if (name.contains("n")) {
-      IO.raiseError(new Exception("MEOW!")).as(name)
-    } else {
-      IO.println(name).as(name)
-    }
+  def finish(stateRef: Ref[IO, State]): IO[Unit] =
+    stateRef.set(State.Finished)
 
-  def printCat: Pipe[IO, String, String] = _.evalTap(IO.println)
-
-  def incrementCount(counter: Ref[IO, Int]): IO[Unit] =
-    counter.update(_ + 1)
-
-  def updateCount(counter: Ref[IO, Int]): Pipe[IO, String, String] =
-    _.evalTap(_ => incrementCount(counter))
-
-  def printCount(counter: Ref[IO, Int]): IO[Unit] =
-    counter.get.flatMap(c => IO.println(s"There are $c cats."))
+  def printState(state: Ref[IO, State]): IO[Unit] =
+    state.get.flatMap(c => IO.println(s"The stream state is $c"))
 
   def run: IO[Unit] = {
-    val counterRef: IO[Ref[IO, Int]] = Ref.of[IO, Int](0)
-    counterRef.flatMap { (counter: Ref[IO, Int]) =>
-      val printCatNamesStream: Stream[IO, String] = manyCats
-        .through(printCat)
-        .through(updateCount(counter))
+    val stateRef: IO[Ref[IO, State]] = Ref.of[IO, State](State.Running)
 
-      printCatNamesStream
-        .compile
-        .drain >>
-        printCount(counter)
-    }
+      stateRef.flatMap { (state: Ref[IO, State]) =>
+
+        val printCatNames: IO[Unit] =
+          manyCats.through(printCat)
+            .evalMap { _ => state.get }
+            .takeWhile(_ != State.Cancelled)
+            .compile
+            .drain
+        
+        val printCatNamesAndFinish = printCatNames >> finish(state)
+
+        val requestCancellation: IO[Unit] =
+          IO.sleep(1.second).flatMap(_ => state.set(State.Cancelled))
+
+        (printCatNamesAndFinish, requestCancellation).parTupled >> printState(state)
+      }
   }
 }
