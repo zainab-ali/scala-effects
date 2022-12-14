@@ -596,3 +596,12 @@ Take a look at the `streamref.CatNamesApp` in the `ref` package. This uses a ref
 
 1. Read through the code. How does `requestCancellation` cancel the stream?
 2. Run the app. Has the stream been cancelled?
+
+
+# Session 36: Warm up exercise
+
+We'll look at some patterns for working with shared state in concurrent systems.
+Take a look at the `stateRef` in the `streamref.CatNamesApp`. 
+
+1. What are the differences, in terms of concurrency challenges, between using a `Ref` or a database to store shared state?
+2. The `update` function is used in two places. Can you generalize the usage of it?

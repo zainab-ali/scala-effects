@@ -25,8 +25,13 @@ object CatNamesApp extends IOApp.Simple {
   def printCat: Pipe[IO, String, String] =
     _.evalTap(IO.println)
 
-  def finish(stateRef: Ref[IO, State]): IO[Unit] =
-    stateRef.set(State.Finished)
+  def finish(stateRef: Ref[IO, State]): IO[Unit] = {
+    stateRef.update { s =>
+      if (s != State.Cancelled) State.Finished
+      else State.Cancelled
+    }
+  }
+
 
   def printState(state: Ref[IO, State]): IO[Unit] =
     state.get.flatMap(c => IO.println(s"The stream state is $c"))
@@ -46,7 +51,9 @@ object CatNamesApp extends IOApp.Simple {
         val printCatNamesAndFinish = printCatNames >> finish(state)
 
         val requestCancellation: IO[Unit] =
-          IO.sleep(1.second).flatMap(_ => state.set(State.Cancelled))
+          IO.sleep(1.second).flatMap(_ => {
+            state.update(s => if (s != State.Finished) State.Cancelled else State.Finished)
+          })
 
         (printCatNamesAndFinish, requestCancellation).parTupled >> printState(state)
       }
